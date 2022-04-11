@@ -87,6 +87,15 @@ export const GameBoard = (props) => {
       d: {
         pressed: false,
       },
+      ArrowUp: {
+        pressed: false,
+      },
+      ArrowRight: {
+        pressed: false,
+      },
+      ArrowLeft: {
+        pressed: false,
+      },
     };
 
     // this function calls itself every animation frame, rn it fills the canvas with black and wherever the player is supposed to be
@@ -114,13 +123,31 @@ export const GameBoard = (props) => {
       if (controls.a.pressed && controls.d.pressed) {
         player.velocity.x = 0;
       }
+      // same as ebove but for enemy movement
+      enemy.velocity.x = 0;
+      if (
+        controls.ArrowUp.pressed &&
+        enemy.position.y + enemy.height >= canvas.height
+      ) {
+        enemy.velocity.y = -10;
+      }
+      if (controls.ArrowLeft.pressed) {
+        enemy.velocity.x = -2;
+      }
+      if (controls.ArrowRight.pressed) {
+        enemy.velocity.x = 2;
+      }
+      if (controls.ArrowLeft.pressed && controls.ArrowRight.pressed) {
+        enemy.velocity.x = 0;
+      }
     };
 
     animate();
 
     // window is just the entire browser dom (window.document.querySelector === document.querySelector)
-    // controls player movement on press of a key
+    // controls fighter movement on press of a key
     window.addEventListener("keydown", (e) => {
+      console.log(e.key);
       switch (e.key) {
         case "w":
           controls.w.pressed = true;
@@ -136,10 +163,22 @@ export const GameBoard = (props) => {
           controls.d.pressed = true;
 
           break;
+        case "ArrowUp":
+          controls.ArrowUp.pressed = true;
+
+          break;
+        case "ArrowRight":
+          controls.ArrowRight.pressed = true;
+
+          break;
+        case "ArrowLeft":
+          controls.ArrowLeft.pressed = true;
+
+          break;
       }
     });
 
-    // stops player movement on keyup through pressed property of key of controls obj
+    // stops fighter movement on keyup through pressed property of key of controls obj
     window.addEventListener("keyup", (e) => {
       switch (e.key) {
         case "w":
@@ -154,6 +193,18 @@ export const GameBoard = (props) => {
 
         case "d":
           controls.d.pressed = false;
+
+          break;
+        case "ArrowUp":
+          controls.ArrowUp.pressed = false;
+
+          break;
+        case "ArrowRight":
+          controls.ArrowRight.pressed = false;
+
+          break;
+        case "ArrowLeft":
+          controls.ArrowLeft.pressed = false;
 
           break;
       }
