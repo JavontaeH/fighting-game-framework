@@ -7,29 +7,40 @@ export const GameBoard = (props) => {
     const c = canvas.getContext("2d");
     canvas.width = 1024;
     canvas.height = 576;
-    c.fillRect(0, 0, canvas.width, canvas.height);
 
     const gravity = 0.2;
     // this class is the constructor for our character elements.
     class Fighter {
       // this gives our fighters a position, velocity, and height based on what we pass in
-      constructor({ position, velocity, height }) {
+      constructor({ position, velocity, height, width }) {
         this.position = position;
         this.velocity = velocity;
         this.height = height;
+        this.width = width;
       }
 
       // draws green boxes for fighter testing
       draw() {
         c.fillStyle = "green";
-        c.fillRect(this.position.x, this.position.y, 50, this.height);
+        c.fillRect(this.position.x, this.position.y, this.width, this.height);
       }
 
+      // updates fighter position
       update() {
         this.draw();
         // changes fighter position based on their velocity
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
+        // stops fighters from running off the stage to the right
+        if (this.position.x + this.velocity.x >= canvas.width - this.width) {
+          this.velocity.x = 0;
+          this.position.x = canvas.width - this.width;
+        }
+        // stops fighters from running off the stage to the left
+        if (this.position.x + this.velocity.x <= 0) {
+          this.velocity.x = 0;
+          this.position.x = 0;
+        }
         // stops our fighters from falling through the games floor by setting their velocity to 0 when sum of the bottom of their height and their velocity >= canvas height
         if (this.position.y + this.height + this.velocity.y >= canvas.height) {
           this.velocity.y = 0;
@@ -49,6 +60,7 @@ export const GameBoard = (props) => {
         y: 0,
       },
       height: 150,
+      width: 50,
     });
 
     const enemy = new Fighter({
@@ -61,6 +73,7 @@ export const GameBoard = (props) => {
         y: 0,
       },
       height: 150,
+      width: 50,
     });
 
     // sets state of game controls with default = to false
