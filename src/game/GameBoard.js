@@ -12,22 +12,51 @@ export const GameBoard = (props) => {
     // this class is the constructor for our character elements.
     class Fighter {
       // this gives our fighters a position, velocity, and height based on what we pass in
-      constructor({ position, velocity, height, width }) {
+      constructor({ position, velocity, height, width, color, hitbox }) {
         this.position = position;
         this.velocity = velocity;
         this.height = height;
         this.width = width;
+        this.color = color;
+        // controls hitbox position,width, and height.
+        this.hitbox = {
+          position: this.position,
+          width: 100,
+          height: 50,
+        };
+        this.attacking = false;
       }
 
-      // draws green boxes for fighter testing
       draw() {
-        c.fillStyle = "green";
+        // draws boxes for fighter testing
+        c.fillStyle = this.color;
         c.fillRect(this.position.x, this.position.y, this.width, this.height);
+
+        // hitbox drawn here
+        if (this.attacking) {
+          c.fillStyle = "red";
+        } else {
+          c.fillStyle = "white";
+        }
+        c.fillRect(
+          this.hitbox.position.x,
+          this.hitbox.position.y,
+          this.hitbox.width,
+          this.hitbox.height
+        );
+      }
+
+      attack() {
+        this.attacking = true;
+        setTimeout(() => {
+          this.attacking = false;
+        }, 100);
       }
 
       // updates fighter position
       update() {
         this.draw();
+
         // changes fighter position based on their velocity
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
@@ -48,6 +77,7 @@ export const GameBoard = (props) => {
         // adds gravity to our fighters by adding to their y velocity every animation frame.
         else this.velocity.y += gravity;
       }
+      // allows me to control whether or not the hitbox should be firing
     }
 
     const player = new Fighter({
@@ -61,6 +91,7 @@ export const GameBoard = (props) => {
       },
       height: 150,
       width: 50,
+      color: "green",
     });
 
     const enemy = new Fighter({
@@ -74,6 +105,7 @@ export const GameBoard = (props) => {
       },
       height: 150,
       width: 50,
+      color: "blue",
     });
 
     // sets state of game controls with default = to false
@@ -97,6 +129,73 @@ export const GameBoard = (props) => {
         pressed: false,
       },
     };
+
+    // window is just the entire browser dom (window.document.querySelector === document.querySelector)
+    // controls fighter movement on press of a key
+    window.addEventListener("keydown", (e) => {
+      switch (e.key) {
+        case "w":
+          controls.w.pressed = true;
+
+          break;
+
+        case "a":
+          controls.a.pressed = true;
+
+          break;
+
+        case "d":
+          controls.d.pressed = true;
+
+          break;
+        case "ArrowUp":
+          controls.ArrowUp.pressed = true;
+
+          break;
+        case "ArrowRight":
+          controls.ArrowRight.pressed = true;
+
+          break;
+        case "ArrowLeft":
+          controls.ArrowLeft.pressed = true;
+
+          break;
+        case " ":
+          player.attack();
+      }
+    });
+
+    // stops fighter movement on keyup through pressed property of key of controls obj
+    window.addEventListener("keyup", (e) => {
+      switch (e.key) {
+        case "w":
+          controls.w.pressed = false;
+
+          break;
+
+        case "a":
+          controls.a.pressed = false;
+
+          break;
+
+        case "d":
+          controls.d.pressed = false;
+
+          break;
+        case "ArrowUp":
+          controls.ArrowUp.pressed = false;
+
+          break;
+        case "ArrowRight":
+          controls.ArrowRight.pressed = false;
+
+          break;
+        case "ArrowLeft":
+          controls.ArrowLeft.pressed = false;
+
+          break;
+      }
+    });
 
     // this function calls itself every animation frame, rn it fills the canvas with black and wherever the player is supposed to be
     const animate = () => {
@@ -140,75 +239,20 @@ export const GameBoard = (props) => {
       if (controls.ArrowLeft.pressed && controls.ArrowRight.pressed) {
         enemy.velocity.x = 0;
       }
+      // hitbox collision
+      if (player.attacking) {
+        if (
+          player.hitbox.position.x + player.hitbox.width >= enemy.position.x &&
+          player.hitbox.position.x <= enemy.position.x + enemy.width &&
+          player.hitbox.position.y + player.hitbox.height >= enemy.position.y &&
+          player.hitbox.position.y <= enemy.position.y + enemy.height
+        ) {
+          console.log("hit!");
+        }
+      }
     };
 
     animate();
-
-    // window is just the entire browser dom (window.document.querySelector === document.querySelector)
-    // controls fighter movement on press of a key
-    window.addEventListener("keydown", (e) => {
-      console.log(e.key);
-      switch (e.key) {
-        case "w":
-          controls.w.pressed = true;
-
-          break;
-
-        case "a":
-          controls.a.pressed = true;
-
-          break;
-
-        case "d":
-          controls.d.pressed = true;
-
-          break;
-        case "ArrowUp":
-          controls.ArrowUp.pressed = true;
-
-          break;
-        case "ArrowRight":
-          controls.ArrowRight.pressed = true;
-
-          break;
-        case "ArrowLeft":
-          controls.ArrowLeft.pressed = true;
-
-          break;
-      }
-    });
-
-    // stops fighter movement on keyup through pressed property of key of controls obj
-    window.addEventListener("keyup", (e) => {
-      switch (e.key) {
-        case "w":
-          controls.w.pressed = false;
-
-          break;
-
-        case "a":
-          controls.a.pressed = false;
-
-          break;
-
-        case "d":
-          controls.d.pressed = false;
-
-          break;
-        case "ArrowUp":
-          controls.ArrowUp.pressed = false;
-
-          break;
-        case "ArrowRight":
-          controls.ArrowRight.pressed = false;
-
-          break;
-        case "ArrowLeft":
-          controls.ArrowLeft.pressed = false;
-
-          break;
-      }
-    });
   }, []);
 
   return <canvas />;
