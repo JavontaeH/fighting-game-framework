@@ -1,0 +1,33 @@
+
+#wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+#HealthTimerUI {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#playerHP {
+    background-color: yellow;
+    height: 50px;
+    width: 100%;
+}
+
+#timer {
+    background-color: blue;
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+}
+
+#enemyHP {
+    background-color: red;
+    height: 50px;
+    width: 100%;
+}

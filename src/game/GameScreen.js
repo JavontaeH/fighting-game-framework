@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
+import "./GameScreen.css";
 
-export const GameBoard = (props) => {
+export const GameScreen = () => {
   // this use effect waits for canvas to mount and then selects it and uses canvas api methods to draw on it.
   useEffect(() => {
     const canvas = document.querySelector("canvas");
@@ -10,9 +11,9 @@ export const GameBoard = (props) => {
 
     const gravity = 0.2;
     // this class is the constructor for our character elements.
-    class Fighter {
-      // this gives our fighters a position, velocity, and height based on what we pass in
-      constructor({ position, velocity, height, width, color, hitbox }) {
+    class Character {
+      // this gives our characters a position, velocity, and height based on what we pass in
+      constructor({ position, velocity, height, width, color, offset }) {
         this.position = position;
         this.velocity = velocity;
         this.height = height;
@@ -20,7 +21,11 @@ export const GameBoard = (props) => {
         this.color = color;
         // controls hitbox position,width, and height.
         this.hitbox = {
-          position: this.position,
+          position: {
+            x: this.position.x,
+            y: this.position.y,
+          },
+          offset: offset,
           width: 100,
           height: 50,
         };
@@ -28,7 +33,7 @@ export const GameBoard = (props) => {
       }
 
       draw() {
-        // draws boxes for fighter testing
+        // draws boxes for character testing
         c.fillStyle = this.color;
         c.fillRect(this.position.x, this.position.y, this.width, this.height);
 
@@ -45,7 +50,7 @@ export const GameBoard = (props) => {
           this.hitbox.height
         );
       }
-
+      // method for triggering an attack which is called when a user/enemy presses their attack button
       attack() {
         this.attacking = true;
         setTimeout(() => {
@@ -53,34 +58,36 @@ export const GameBoard = (props) => {
         }, 100);
       }
 
-      // updates fighter position
+      // updates character position
       update() {
         this.draw();
+        // update hitbox to follow character position manually with an offset
+        this.hitbox.position.x = this.position.x - this.hitbox.offset.x;
+        this.hitbox.position.y = this.position.y;
 
-        // changes fighter position based on their velocity
+        // changes character position based on their velocity
         this.position.x += this.velocity.x;
         this.position.y += this.velocity.y;
-        // stops fighters from running off the stage to the right
+        // stops characters from running off the stage to the right
         if (this.position.x + this.velocity.x >= canvas.width - this.width) {
           this.velocity.x = 0;
           this.position.x = canvas.width - this.width;
         }
-        // stops fighters from running off the stage to the left
+        // stops characters from running off the stage to the left
         if (this.position.x + this.velocity.x <= 0) {
           this.velocity.x = 0;
           this.position.x = 0;
         }
-        // stops our fighters from falling through the games floor by setting their velocity to 0 when sum of the bottom of their height and their velocity >= canvas height
+        // stops our characters from falling through the games floor by setting their velocity to 0 when sum of the bottom of their height and their velocity >= canvas height
         if (this.position.y + this.height + this.velocity.y >= canvas.height) {
           this.velocity.y = 0;
         }
-        // adds gravity to our fighters by adding to their y velocity every animation frame.
+        // adds gravity to our characters by adding to their y velocity every animation frame.
         else this.velocity.y += gravity;
       }
-      // allows me to control whether or not the hitbox should be firing
     }
 
-    const player = new Fighter({
+    const player = new Character({
       position: {
         x: canvas.width / 2 - 100,
         y: 0,
@@ -89,18 +96,26 @@ export const GameBoard = (props) => {
         x: 0,
         y: 0,
       },
+      offset: {
+        x: 0,
+        y: 0,
+      },
       height: 150,
       width: 50,
       color: "green",
     });
 
-    const enemy = new Fighter({
+    const enemy = new Character({
       position: {
         x: canvas.width / 2 + 100,
         y: 0,
       },
       velocity: {
         x: 0,
+        y: 0,
+      },
+      offset: {
+        x: 50,
         y: 0,
       },
       height: 150,
@@ -131,7 +146,7 @@ export const GameBoard = (props) => {
     };
 
     // window is just the entire browser dom (window.document.querySelector === document.querySelector)
-    // controls fighter movement on press of a key
+    // controls character movement on press of a key
     window.addEventListener("keydown", (e) => {
       switch (e.key) {
         case "w":
@@ -146,8 +161,13 @@ export const GameBoard = (props) => {
 
         case "d":
           controls.d.pressed = true;
+          break;
+
+        case " ":
+          player.attack();
 
           break;
+
         case "ArrowUp":
           controls.ArrowUp.pressed = true;
 
@@ -160,12 +180,12 @@ export const GameBoard = (props) => {
           controls.ArrowLeft.pressed = true;
 
           break;
-        case " ":
-          player.attack();
+        case "/":
+          enemy.attack();
       }
     });
 
-    // stops fighter movement on keyup through pressed property of key of controls obj
+    // stops character movement on keyup through pressed property of key of controls obj
     window.addEventListener("keyup", (e) => {
       switch (e.key) {
         case "w":
@@ -239,7 +259,7 @@ export const GameBoard = (props) => {
       if (controls.ArrowLeft.pressed && controls.ArrowRight.pressed) {
         enemy.velocity.x = 0;
       }
-      // hitbox collision
+      // hitbox collision for player attacks
       if (player.attacking) {
         if (
           player.hitbox.position.x + player.hitbox.width >= enemy.position.x &&
@@ -247,15 +267,52 @@ export const GameBoard = (props) => {
           player.hitbox.position.y + player.hitbox.height >= enemy.position.y &&
           player.hitbox.position.y <= enemy.position.y + enemy.height
         ) {
-          console.log("hit!");
+          // TODO: figure out how to stop timer and player hp from moving when this happens
+          // subtract hp when hit enemy
+          document.querySelector("#enemyHP").style.width = "20%";
         }
+      }
+      // conditional for swapping hitbox position when the player crosses the enemy
+      if (player.hitbox.position.x <= enemy.position.x + enemy.width) {
+        player.hitbox.offset.x = -50;
+      } else {
+        player.hitbox.offset.x = 100;
+      }
+
+      // hitbox collision for enemy attacks
+      if (enemy.attacking) {
+        if (
+          enemy.hitbox.position.x + enemy.hitbox.width >= player.position.x &&
+          enemy.hitbox.position.x <= player.position.x + player.width &&
+          enemy.hitbox.position.y + enemy.hitbox.height >= player.position.y &&
+          enemy.hitbox.position.y <= player.position.y + player.height
+        ) {
+          console.log("enemy hit!");
+        }
+      }
+      // conditional for swapping hitbox position when the enemy crosses the player
+      if (enemy.hitbox.position.x <= player.position.x + player.width) {
+        enemy.hitbox.offset.x = -50;
+      } else {
+        enemy.hitbox.offset.x = 100;
       }
     };
 
     animate();
   }, []);
 
-  return <canvas />;
+  return (
+    <>
+      <div id="wrapper">
+        <div id="HealthTimerUI">
+          <div id="playerHP"></div>
+          <div id="timer"></div>
+          <div id="enemyHP"></div>
+        </div>
+        <canvas />
+      </div>
+    </>
+  );
 };
 
-// export default GameBoard;
+// export default GameScreen;
